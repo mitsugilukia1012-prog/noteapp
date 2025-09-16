@@ -1,78 +1,31 @@
-body {
-    font-family: Arial, sans-serif;
-    background-color: #f4f4f4;
+/* auth-areaのスタイルを追加 */
+.auth-area {
     display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    min-height: 100vh;
-    margin: 0;
-    padding-top: 50px;
-}
-
-.container {
-    width: 90%;
-    max-width: 600px;
-    background-color: #fff;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-
-h1 {
-    text-align: center;
-    color: #333;
-}
-
-.input-area {
-    display: flex;
+    flex-direction: column;
+    gap: 10px;
     margin-bottom: 20px;
 }
-
-#note-input {
-    flex-grow: 1;
+#email-input, #password-input {
     padding: 10px;
     border: 1px solid #ddd;
     border-radius: 4px;
 }
-
-#add-btn {
+#signup-btn, #signin-btn, #signout-btn {
     padding: 10px 15px;
-    margin-left: 10px;
     border: none;
     background-color: #007BFF;
     color: white;
     border-radius: 4px;
     cursor: pointer;
 }
-
-#add-btn:hover {
+#signup-btn:hover, #signin-btn:hover, #signout-btn:hover {
     background-color: #0056b3;
 }
-
+/* メモの入力とリストは非表示からスタート */
+.input-area {
+    display: none;
+    /* その他のスタイルは既存のものを引き継ぎ */
+}
 #note-list {
-    list-style: none;
-    padding: 0;
-}
-
-#note-list li {
-    background-color: #e9ecef;
-    padding: 10px;
-    margin-bottom: 10px;
-    border-radius: 4px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-#note-list .delete-btn {
-    background-color: #dc3545;
-    color: white;
-    border: none;
-    padding: 5px 10px;
-    border-radius: 4px;
-    cursor: pointer;
-}
-
-#note-list .delete-btn:hover {
-    background-color: #c82333;
+    display: none;
 }
