@@ -1,73 +1,110 @@
-// Import the functions you need from the SDKs you need
+// Firebase SDKのインポート
 import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
+import { getAuth, signInAnonymously, onAuthStateChanged } from "firebase/auth";
+import { getDatabase, ref, onValue, push, remove } from "firebase/database";
 
-// Your web app's Firebase configuration
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+// Firebaseの設定を貼り付け
 const firebaseConfig = {
-  apiKey: "AIzaSyBqn_TrZTBY1SYubyBUKm4wQ-uMJ_zeNpQ",
-  authDomain: "noteappa-99fed.firebaseapp.com",
-  projectId: "noteappa-99fed",
-  storageBucket: "noteappa-99fed.firebasestorage.app",
-  messagingSenderId: "1079670475114",
-  appId: "1:1079670475114:web:1cb3efc4fcc3d6af007d13",
-  measurementId: "G-1H1YV0E4YM"
+  apiKey: "AIzaSyBqn_TrZTBY1SYubyBUKm4wQ-uMJ_zeNpQ",
+  authDomain: "noteappa-99fed.firebaseapp.com",
+  projectId: "noteappa-99fed",
+  storageBucket: "noteappa-99fed.firebasestorage.app",
+  messagingSenderId: "1079670475114",
+  appId: "1:1079670475114:web:1cb3efc4fcc3d6af007d13",
+  measurementId: "G-1H1YV0E4YM"
 };
 
-// Initialize Firebase
+// Firebaseを初期化
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+const auth = getAuth(app);
+const database = getDatabase(app);
 
-// この下に、以前提示したscript.jsの本体コードを貼り付けます
-// 例: document.addEventListener('DOMContentLoaded', () => { ... });
 document.addEventListener('DOMContentLoaded', () => {
     const noteInput = document.getElementById('note-input');
     const addBtn = document.getElementById('add-btn');
     const noteList = document.getElementById('note-list');
 
-    // 初期メモをロード
-    const initialNote = "新しいプロジェクトのアイデア";
-    if (!localStorage.getItem('notes')) {
-        const notes = [initialNote];
-        localStorage.setItem('notes', JSON.stringify(notes));
-    }
+    let userId = null;
+    let notesRef = null;
 
-    // メモを画面に表示する関数
-    function renderNotes() {
-        noteList.innerHTML = ''; // 一旦リストをクリア
-        const notes = JSON.parse(localStorage.getItem('notes')) || [];
-        notes.forEach((noteText, index) => {
-            const li = document.createElement('li');
-            li.innerHTML = `
-                <span>${noteText}</span>
-                <button class="delete-btn" data-index="${index}">削除</button>
-            `;
-            noteList.appendChild(li);
+    // 匿名ログイン
+    signInAnonymously(auth)
+        .then(() => {
+            console.log("匿名ログイン成功");
+        })
+        .catch((error) => {
+            console.error("匿名ログイン失敗", error);
+        });
+
+    // ログイン状態の変化を監視
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            userId = user.uid;
+            notesRef = ref(database, `notes/${userId}`);
+            // ユーザーIDに基づいてメモを読み込む
+            loadNotes(notesRef);
+        } else {
+            // ログアウト状態
+            userId = null;
+            notesRef = null;
+            noteList.innerHTML = '';
+        }
+    });
+
+    // メモをサーバーから読み込む関数
+    function loadNotes(notesRef) {
+        onValue(notesRef, (snapshot) => {
+            noteList.innerHTML = ''; // 一旦リストをクリア
+            const notes = snapshot.val() || {};
+            const noteKeys = Object.keys(notes);
+            noteKeys.forEach((key) => {
+                const noteText = notes[key];
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <span>${noteText}</span>
+                    <button class="delete-btn" data-key="${key}">削除</button>
+                `;
+                noteList.appendChild(li);
+            });
         });
     }
 
-    // メモを追加する関数
+    // メモをサーバーに追加する関数
     function addNote() {
+        if (!userId) {
+            alert('ログインしていません。');
+            return;
+        }
+
         const noteText = noteInput.value.trim();
         if (noteText !== "") {
-            const notes = JSON.parse(localStorage.getItem('notes')) || [];
-            notes.push(noteText);
-            localStorage.setItem('notes', JSON.stringify(notes));
-            noteInput.value = ''; // 入力欄をクリア
-            renderNotes();
+            push(notesRef, noteText)
+                .then(() => {
+                    noteInput.value = ''; // 入力欄をクリア
+                })
+                .catch((error) => {
+                    console.error("メモの追加に失敗", error);
+                });
         }
     }
 
-    // メモを削除する関数
+    // メモをサーバーから削除する関数
     function deleteNote(e) {
+        if (!userId) {
+            alert('ログインしていません。');
+            return;
+        }
+
         if (e.target.classList.contains('delete-btn')) {
-            const index = e.target.getAttribute('data-index');
-            const notes = JSON.parse(localStorage.getItem('notes')) || [];
-            notes.splice(index, 1);
-            localStorage.setItem('notes', JSON.stringify(notes));
-            renderNotes();
+            const key = e.target.getAttribute('data-key');
+            const noteToDeleteRef = ref(database, `notes/${userId}/${key}`);
+            remove(noteToDeleteRef)
+                .then(() => {
+                    console.log("削除成功");
+                })
+                .catch((error) => {
+                    console.error("削除失敗", error);
+                });
         }
     }
 
@@ -81,8 +118,4 @@ document.addEventListener('DOMContentLoaded', () => {
             addNote();
         }
     });
-
-    // 初期表示
-    renderNotes();
-
 });
