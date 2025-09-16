@@ -1,121 +1,78 @@
-// Firebase SDKのインポート
-import { initializeApp } from "firebase/app";
-import { getAuth, signInAnonymously, onAuthStateChanged } from "firebase/auth";
-import { getDatabase, ref, onValue, push, remove } from "firebase/database";
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    margin: 0;
+    padding-top: 50px;
+}
 
-// Firebaseの設定を貼り付け
-const firebaseConfig = {
-  apiKey: "AIzaSyBqn_TrZTBY1SYubyBUKm4wQ-uMJ_zeNpQ",
-  authDomain: "noteappa-99fed.firebaseapp.com",
-  projectId: "noteappa-99fed",
-  storageBucket: "noteappa-99fed.firebasestorage.app",
-  messagingSenderId: "1079670475114",
-  appId: "1:1079670475114:web:1cb3efc4fcc3d6af007d13",
-  measurementId: "G-1H1YV0E4YM"
-};
+.container {
+    width: 90%;
+    max-width: 600px;
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
 
-// Firebaseを初期化
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const database = getDatabase(app);
+h1 {
+    text-align: center;
+    color: #333;
+}
 
-document.addEventListener('DOMContentLoaded', () => {
-    const noteInput = document.getElementById('note-input');
-    const addBtn = document.getElementById('add-btn');
-    const noteList = document.getElementById('note-list');
+.input-area {
+    display: flex;
+    margin-bottom: 20px;
+}
 
-    let userId = null;
-    let notesRef = null;
+#note-input {
+    flex-grow: 1;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
 
-    // 匿名ログイン
-    signInAnonymously(auth)
-        .then(() => {
-            console.log("匿名ログイン成功");
-        })
-        .catch((error) => {
-            console.error("匿名ログイン失敗", error);
-        });
+#add-btn {
+    padding: 10px 15px;
+    margin-left: 10px;
+    border: none;
+    background-color: #007BFF;
+    color: white;
+    border-radius: 4px;
+    cursor: pointer;
+}
 
-    // ログイン状態の変化を監視
-    onAuthStateChanged(auth, (user) => {
-        if (user) {
-            userId = user.uid;
-            notesRef = ref(database, `notes/${userId}`);
-            // ユーザーIDに基づいてメモを読み込む
-            loadNotes(notesRef);
-        } else {
-            // ログアウト状態
-            userId = null;
-            notesRef = null;
-            noteList.innerHTML = '';
-        }
-    });
+#add-btn:hover {
+    background-color: #0056b3;
+}
 
-    // メモをサーバーから読み込む関数
-    function loadNotes(notesRef) {
-        onValue(notesRef, (snapshot) => {
-            noteList.innerHTML = ''; // 一旦リストをクリア
-            const notes = snapshot.val() || {};
-            const noteKeys = Object.keys(notes);
-            noteKeys.forEach((key) => {
-                const noteText = notes[key];
-                const li = document.createElement('li');
-                li.innerHTML = `
-                    <span>${noteText}</span>
-                    <button class="delete-btn" data-key="${key}">削除</button>
-                `;
-                noteList.appendChild(li);
-            });
-        });
-    }
+#note-list {
+    list-style: none;
+    padding: 0;
+}
 
-    // メモをサーバーに追加する関数
-    function addNote() {
-        if (!userId) {
-            alert('ログインしていません。');
-            return;
-        }
+#note-list li {
+    background-color: #e9ecef;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-radius: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
 
-        const noteText = noteInput.value.trim();
-        if (noteText !== "") {
-            push(notesRef, noteText)
-                .then(() => {
-                    noteInput.value = ''; // 入力欄をクリア
-                })
-                .catch((error) => {
-                    console.error("メモの追加に失敗", error);
-                });
-        }
-    }
+#note-list .delete-btn {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+}
 
-    // メモをサーバーから削除する関数
-    function deleteNote(e) {
-        if (!userId) {
-            alert('ログインしていません。');
-            return;
-        }
-
-        if (e.target.classList.contains('delete-btn')) {
-            const key = e.target.getAttribute('data-key');
-            const noteToDeleteRef = ref(database, `notes/${userId}/${key}`);
-            remove(noteToDeleteRef)
-                .then(() => {
-                    console.log("削除成功");
-                })
-                .catch((error) => {
-                    console.error("削除失敗", error);
-                });
-        }
-    }
-
-    // イベントリスナーの設定
-    addBtn.addEventListener('click', addNote);
-    noteList.addEventListener('click', deleteNote);
-
-    // Enterキーでメモを追加
-    noteInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') {
-            addNote();
-        }
-    });
-});
+#note-list .delete-btn:hover {
+    background-color: #c82333;
+}
