@@ -24,7 +24,6 @@
 /* メモの入力とリストは非表示からスタート */
 .input-area {
     display: none;
-    /* その他のスタイルは既存のものを引き継ぎ */
 }
 #note-list {
     display: none;
